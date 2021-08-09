@@ -1,10 +1,14 @@
+use crate::state::save;
 use cosmwasm_std::{
     debug_print, to_binary, Api, Binary, Env, Extern, HandleResponse, InitResponse, Querier,
     StdError, StdResult, Storage,
 };
 
-use crate::msg::{CountResponse, HandleMsg, InitMsg, QueryMsg};
-use crate::state::{config, config_read, State};
+use libipld::block::Block;
+use libipld::ipld::{Ipld, IpldIndex};
+use libipld::codec_impl::IpldCodec;
+use crate::msg::{HandleAnswer, HandleMsg, InitMsg, QueryAnswer, QueryMsg};
+use crate::state::{config, config_read, File, Metadata, State};
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
@@ -12,7 +16,7 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
     msg: InitMsg,
 ) -> StdResult<InitResponse> {
     let state = State {
-        count: msg.count,
+        paused: false,
         owner: deps.api.canonical_address(&env.message.sender)?,
     };
 
@@ -29,26 +33,49 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     msg: HandleMsg,
 ) -> StdResult<HandleResponse> {
     match msg {
-        HandleMsg::Increment {} => try_increment(deps, env),
-        HandleMsg::Reset { count } => try_reset(deps, env, count),
+        HandleMsg::AddFile {
+            cid,
+            path,
+            content_type,
+            data,
+            length,
+        } => add_file(deps, env),
+        HandleMsg::AddMetadata { cid, data } => add_metadata(deps, env),
     }
 }
 
-pub fn try_increment<S: Storage, A: Api, Q: Querier>(
+pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     _env: Env,
 ) -> StdResult<HandleResponse> {
-    config(&mut deps.storage).update(|mut state| {
-        state.count += 1;
-        debug_print!("count = {}", state.count);
-        Ok(state)
-    })?;
 
-    debug_print("count incremented successfully");
-    Ok(HandleResponse::default())
+
+    // libipld / rust-ipld
+    //  ipld!{
+    //     
+    // }
+
+    let b3 = Block::encode(
+        IpldCodec::DagCbor,
+        Code::Blake3_256,
+        &ipld!({
+            "Data": &b"data"[..],
+            "Links": Ipld::List(vec![]),
+        }),
+    );
+    let params = Metadata {
+        cid: cid,
+        metadata: metadata,
+    };
+
+    save(&mut deps.storage, b"metadata", &params)?;
+
+    let callback = HandleResponse::default();
+
+    Ok(callback)
 }
 
-pub fn try_reset<S: Storage, A: Api, Q: Querier>(
+pub fn add_file<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     count: i32,
