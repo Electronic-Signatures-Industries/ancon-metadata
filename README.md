@@ -1,4 +1,4 @@
-# XDV Rust Protocol Smart Contracts
+# XDV Protocol Rust Smart Contracts
 
 ## Metadata JSON Schema
 
