@@ -10,23 +10,27 @@
   "description": "XDV Protocol metadata schema",
   "type": "object",
   "properties": {
-      "name": {
-          "type": "string",
-          "description": "Identifies the asset to which this token represents",
-      },
-      "description": {
-          "type": "string",
-          "description": "Describes the asset to which this token represents",
-      },
-      "image": {
-          "type": "string",
-          "description": "A URI pointing to a resource with mime type image/* representing the asset to which this token represents.",
-      };
-      "links": {
-          "type": "array",
-          "description": "A set of ipld links",
-      };
-  };
+    "name": {
+      "type": "string",
+      "description": "Identifies the asset to which this token represents",
+    },
+    "description": {
+      "type": "string",
+      "description": "Describes the asset to which this token represents",
+    },
+    "image": {
+      "type": "string",
+      "description": "A URI pointing to a resource with mime type image/* representing the asset to which this token represents.",
+    },
+    "links": {
+      "type": "array",
+      "description": "A set of ipld links",
+    },
+    "service": {
+      "type": "array",
+      "description": "IPLD to get link data sources, must be order sensitive to match the links for a template",
+    }
+  },
   "required": [ "name", "description", "image" ]
 },
 ```
@@ -39,9 +43,14 @@
   "description": "testing sample",
   "image": "https://explore.ipld.io/#/explore/QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
   "links": [
-    "https://explore.ipld.io/#/explore/QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
-    "https://explore.ipld.io/#/explore/z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE",
-    "https://explore.ipld.io/#/explore/QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm",
+    "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
+    "z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE",
+    "QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm",
   ],
+  "service": [
+    "https://explore.ipld.io/#/explore/",
+    "https://explore.ipld.io/#/explore/",
+    "https://explore.ipld.io/#/explore/",
+  ]
 }
 ```
