@@ -14,6 +14,9 @@ use crate::state::{config, config_read, File, Metadata, MetadataSchema, Metadata
 use libipld::cid::multihash::Code;
 use libipld::Cid;
 use libipld::store::DefaultParams;
+use libipld::Ipld::Link;
+use libipld::Ipld::List;
+use std::str::FromStr;
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
@@ -54,8 +57,18 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
     _env: Env,
     data: MetadataSchema,
 ) -> StdResult<HandleAnswer> {
+    //TODO: 
+    //Do a for each instead of a map collect 
+    //because Ipld Link is not a collection
+    
+    let ipld = Ipld::List(vec![
+        Ipld::Link(Cid::from_str("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D").unwrap()), 
+        Ipld::Link(Cid::from_str("QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm").unwrap())]);
 
-    //let links = Ipld::StringMap(data.links);
+    let links = data.links.iter()
+    .map(|l| Cid::from_str(l).unwrap())
+    .collect::<Vec<Cid>>();
+
     let block = Block::<DefaultParams>::encode(
         IpldCodec::DagCbor,
         Code::Blake3_256,
@@ -63,6 +76,8 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
             "name":data.name,
             "description": data.description,
             "image": data.image,
+            "links": ipld,
+            //"link": Ipld::List(vec![links]),
         }),
     ).unwrap();
 
