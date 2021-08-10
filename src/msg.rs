@@ -1,5 +1,6 @@
 use crate::state::File;
 use crate::state::Metadata;
+use crate::state::MetadataSchema;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -15,15 +16,14 @@ pub struct InitMsg {
 pub enum HandleMsg {
     // add HandleMsg types here
     AddFile {
-        content_type: String,
-        cid: String,
         path: String,
-        data: Vec<u8>,
-        length: u64,
+        content: Vec<u8>,
+        mode: String,
+        time: u64, 
+        content_type: String,
     },
     AddMetadata {
-        cid: String,
-        data: Vec<u8>,
+        data: MetadataSchema,
     },
 }
 
@@ -45,8 +45,10 @@ pub enum QueryMsg {
 pub enum HandleAnswer {
     // add HandleMsg response types here
     AddFile { 
+        path: String,
         cid: String,
-        content_type: String,
+        mode: String,
+        time: u64,
         length: u64,
     },
     AddMetadata { cid: String },

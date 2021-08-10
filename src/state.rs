@@ -13,6 +13,7 @@ use schemars::JsonSchema;
 
 use secret_toolkit::storage::{AppendStore, AppendStoreMut};
 use serde::de::DeserializeOwned;
+use libipld::Cid;
 
 pub static CONFIG_KEY: &[u8] = b"config";
 
@@ -23,15 +24,30 @@ pub struct File {
     pub content_type: String,
     pub cid: String,
     pub path: String,
-    pub data: Vec<u8>,
-    pub length: u64,
+    pub content: Vec<u8>,
+    pub mode: String,
+    pub size: u64,
 }
 
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq,  JsonSchema)]
 pub struct Metadata {
     pub cid: String,
+    pub data: MetadataSchema,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct MetadataStorage {
+    pub cid: String,
     pub data: Vec<u8>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq,  JsonSchema)]
+pub struct MetadataSchema {
+    pub name: String,
+    pub description: String,
+    pub image: String,
+    pub links: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
