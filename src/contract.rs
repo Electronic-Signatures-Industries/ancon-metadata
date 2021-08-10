@@ -36,7 +36,7 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     msg: HandleMsg,
-) -> StdResult<HandleResponse> {
+) -> StdResult<HandleAnswer> {
     match msg {
         HandleMsg::AddFile {
             path,
@@ -53,7 +53,7 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     _env: Env,
     data: MetadataSchema,
-) -> StdResult<HandleResponse> {
+) -> StdResult<HandleAnswer> {
 
     //let links = Ipld::StringMap(data.links);
     let block = Block::<DefaultParams>::encode(
@@ -63,21 +63,17 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
             "name":data.name,
             "description": data.description,
             "image": data.image,
-            //"links": data.links,
         }),
     ).unwrap();
 
-    let payload = MetadataStorage {
-        cid: block.cid().to_string(),
-        data: block.data().to_vec(),
-    };
-
-    let id = payload.cid.into_bytes();
-
-    save(&mut deps.storage, &id, &payload.data)?;
-
-    let callback = HandleResponse::default();
-
+    let cid = block.cid().to_string();
+    let data = block.data().to_vec();
+    
+    let callback = HandleAnswer::AddMetadata{cid: cid.clone()};
+    
+    let id = cid.into_bytes();
+    save(&mut deps.storage, &id, &data)?;
+    
     Ok(callback)
 }
 
@@ -89,19 +85,29 @@ pub fn add_file<S: Storage, A: Api, Q: Querier>(
     time: u64,
     content: Vec<u8>,
     mode: String,
-) -> StdResult<HandleResponse> {
-    // let sender_address_raw = deps.api.canonical_address(&env.message.sender)?;
-    // config(&mut deps.storage).update(|mut state| {
-    //     if sender_address_raw != state.owner {
-    //         return Err(StdError::Unauthorized { backtrace: None });
-    //     }
-    //     state.count = count;
-    //     Ok(state)
-    // })?;
-    // debug_print("count reset successfully");
-    // Ok(HandleResponse::default())
-    let callback = HandleResponse::default();
+) -> StdResult<HandleAnswer> {
+    let sender_address_raw = deps.api.canonical_address(&env.message.sender)?;
 
+    let block = Block::<DefaultParams>::encode(
+        IpldCodec::DagCbor,
+        Code::Blake3_256,
+        &ipld!({
+            "owner": sender_address_raw.to_string(),
+            "path": path,
+            "type": content_type,
+            "content": content,
+            "time": time,
+        }),
+    ).unwrap();
+
+    let cid = block.cid().to_string();
+    let data = block.data().to_vec();
+    
+    let callback = HandleAnswer::AddFile{cid:cid.clone()};
+    
+    let id = cid.into_bytes();
+    save(&mut deps.storage, &id, &data)?;
+    
     Ok(callback)
 }
 

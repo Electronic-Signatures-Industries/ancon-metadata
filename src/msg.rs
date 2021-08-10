@@ -45,11 +45,7 @@ pub enum QueryMsg {
 pub enum HandleAnswer {
     // add HandleMsg response types here
     AddFile { 
-        path: String,
         cid: String,
-        mode: String,
-        time: u64,
-        length: u64,
     },
     AddMetadata { cid: String },
 }
