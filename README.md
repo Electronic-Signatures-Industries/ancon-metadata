@@ -27,7 +27,7 @@
           "description": "A set of ipld links",
       };
   };
-  "required": [ "name", "description", "image" ]
+  "required": [ "name", "description", "image", "links" ]
 },
 ```
 

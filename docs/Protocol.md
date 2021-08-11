@@ -28,45 +28,131 @@
 
 ##   Simple Summary
 
-Implement a DID for documents or identities that can be legally verifiable using qualified signatures from smart card or HSM.
+Enables an IPLD protocol level Metadata and Files smart contract for use with data economy use cases.
 
 ##  Abstract
 
-We propose a novel way to  use old technology with newer technology like Verified Credentials (VC) model. In `did:xdv`, an `Issuer` has a government mandated
-smart card containing RSA keys compatible with either PKCS#11 or PKCS#12. `Issuer` can sign VC models and also XML with `XAdes` which stands for `XML Advanced Electronic Signatures`.
+By having Metadata domain model be defined as a smart contract, we can accomplish more advanced scenarios when creating "data tokens", non fungible tokens NFT and securing offchain data computing.
 
-These combination of signatures can be further extended with `IPLD` as linked data schema. The `Holder` then can use this credential to interact with the `Issuer`
-or `Verifier`.
-
-
-##  Motivation
-
-In previous hackathon organized by Escala Latam, BID / IDB Labs and `Camara Panamena de Tecnologia (CAPATEC)`, there was a challenge that has never been able to be resolved
-by the customer, **How can I extend the trust from my smart cards keys to allow a set of "verified/trusted" users sign documents with other keys and still be trustable**
-
-
-##  Prior Art
-
-We already explored in `XOPA-001` a way to key exchange or VC exchange using a data model based on a scanned identity card. But is very narrow target, so we went
-back to the drawing board and research the existing digital signatures laws in Panama.
-
-We found not only `PAdes` is legal, but also `XAdes` and `CAdes`. With that in place, and with our fork off `did-jwt` called `did-jwt-rsa`, we fork the next library
-for this use case `did-jwt-vc` to `did-jwt-rsa-vc`.
-
-Thus the specification contains the following prior arts and implementations:
-
-- **did-jwt** and **did-jwt-vc** forked libraries for RSA cryptosuite
-- XDV Signer with XAdes signing enabled
-- XDV Protocol (under development)
-- XDV Universal Wallet
+IPLD schemas forms the base interface in XDV Protocol that makes in an agnostic way, worked with diverse linked data sets and at the same time, keep track or verified links.
 
 
 
 ## Specification
 
-### TODO - Offchain KYC
+### Metadata
 
-This KYC is done before any `XOPA-002` application can start enrolling users.
+
+## `xdv.metadata.add(value, [options])`
+
+> Adds a metadata based on XDV - 721.
+
+
+### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| value | [CID][] | The content to publish |
+
+### Options
+
+> Pending
+
+An optional object which may have the following keys:
+
+| Name | Type | Default | Description |
+| ---- | ---- | ------- | ----------- |
+| resolve | `boolean` | `true` | Resolve given path before publishing |
+| lifetime | `String` | `24h` | Time duration of the record |
+| ttl | `String` | `undefined` | Time duration this record should be cached |
+| key | `String` | `'self'` | Name of the key to be used |
+| allowOffline | `boolean` | `true` | When offline, save the IPNS record to the the local datastore without broadcasting to the network instead of simply failing. |
+| timeout | `Number` | `undefined` | A timeout in ms |
+| signal | [AbortSignal][] | `undefined` |  Can be used to cancel any long running requests started as a result of this call |
+
+### Returns
+
+| Type | Description |
+| -------- | -------- |
+| `Promise<String>` | An object that contains the IPNS hash and the IPFS hash |
+
+example of the returned object:
+
+```JavaScript
+{
+  cid: "QmHash.."
+}
+```
+
+### JSON Schema
+
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xdv.digital/v1/protocol/metadata",
+  "title": "metadata",
+  "description": "XDV Protocol metadata schema",
+  "type": "object",
+  "properties": {
+      "name": {
+          "type": "string",
+          "description": "Identifies the asset to which this token represents",
+      },
+      "description": {
+          "type": "string",
+          "description": "Describes the asset to which this token represents",
+      },
+      "image": {
+          "type": "string",
+          "description": "A URI pointing to a resource with mime type image/* representing the asset to which this token represents.",
+      };
+      "links": {
+          "type": "array",
+          "description": "A set of ipld links",
+      };
+  };
+  "required": [ "name", "description", "image", "links" ]
+},
+```
+
+### Example
+
+Imagine you want to publish your website under IPFS. You can use the [Files API](./FILES.md) to publish your static website and then you'll get a multihash you can link to. But when you need to make a change, a problem arises: you get a new multihash because you now have a different content. And it is not possible for you to be always giving others the new address.
+
+Here's where the Name API comes in handy. With it, you can use one static multihash for your website under IPNS (InterPlanetary Name Service). This way, you can have one single multihash poiting to the newest version of your website.
+
+```JavaScript
+
+// TODO: Pending CosmJS integration
+
+const payload = {
+  "name": "XDV metadata sample",
+  "description": "testing sample",
+  "image": "https://explore.ipld.io/#/explore/QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
+  "services": ["https://explore.ipld.io/#/explore/",
+  "https://explore.ipld.io/#/explore/",
+  "https://explore.ipld.io/#/explore/"],
+  "links": [
+    "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
+    "z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE",
+    "QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm",
+  ],
+};
+
+
+const res = await xdv.metadata.add(payload)
+console.log(`https://gateway.xdv.digital/xdv/${res.cid}`)
+```
+
+This way, you can republish a new version of your website under the same address. By default, `ipfs.name.publish` will use the Peer ID. If you want to have multiple websites (for example) under the same IPFS module, you can always check the [key API](./KEY.md).
+
+A great source of [examples][] can be found in the tests for this API.
+
+### Notes
+
+The `allowOffline` option is not yet implemented in js-ipfs. See tracking issue [ipfs/js-ipfs#1997](https://github.com/ipfs/js-ipfs/issues/1997).
+
 
 ### TODO - Enroll
 
