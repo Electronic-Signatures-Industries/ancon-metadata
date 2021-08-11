@@ -9,7 +9,7 @@ use crate::state::{config, config_read, File, Metadata, MetadataSchema, Metadata
 use libipld::block::Block;
 use libipld::codec_impl::IpldCodec;
 use libipld::ipld;
-use libipld::ipld::{Ipld, IpldIndex};
+use libipld::ipld::Ipld;
 
 use libipld::cid::multihash::Code;
 use libipld::store::DefaultParams;
@@ -60,16 +60,27 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
     //TODO:
     //Do a for each instead of a map collect
     //because Ipld Link is not a collection
-    let ipld = Ipld::List(vec![
-        Ipld::Link(Cid::from_str("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D").unwrap()),
-        Ipld::Link(Cid::from_str("QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm").unwrap()),
-    ]);
+    //let ipld = Ipld::List(vec![
+    //    Ipld::Link(Cid::from_str("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D").unwrap()),
+    //    Ipld::Link(Cid::from_str("QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm").unwrap()),
+    //]);
 
-    let links = data
+    // let links = data
+    //     .links
+    //     .iter()
+    //     .map(|l| Cid::from_str(l).unwrap())
+    //     .collect::<Vec<Ipld::Link(Cid)>>();
+    let links: Vec<_> = data
         .links
         .iter()
-        .map(|l| Cid::from_str(l).unwrap())
-        .collect::<Vec<Cid>>();
+        .map(|l| Ipld::Link(Cid::from_str(l).unwrap()))
+        .collect();
+    //links.iter().map(|l| println!("{}", l.to_string()));
+    // let links2 = data.links;
+
+    // for x in links2.iter() {
+    //     links2[x] = links2[x];
+    // };
 
     let block = Block::<DefaultParams>::encode(
         IpldCodec::DagCbor,
@@ -78,8 +89,7 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
             "name":data.name,
             "description": data.description,
             "image": data.image,
-            "links": ipld,
-            //"link": Ipld::List(vec![links]),
+            "links": links,
         }),
     )
     .unwrap();
