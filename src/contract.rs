@@ -4,16 +4,16 @@ use cosmwasm_std::{
     StdError, StdResult, Storage,
 };
 
-use libipld::block::Block;
-use libipld::ipld;
-use libipld::ipld::{Ipld, IpldIndex};
-use libipld::codec_impl::IpldCodec;
 use crate::msg::{HandleAnswer, HandleMsg, InitMsg, QueryAnswer, QueryMsg};
 use crate::state::{config, config_read, File, Metadata, MetadataSchema, MetadataStorage, State};
+use libipld::block::Block;
+use libipld::codec_impl::IpldCodec;
+use libipld::ipld;
+use libipld::ipld::{Ipld, IpldIndex};
 
 use libipld::cid::multihash::Code;
-use libipld::Cid;
 use libipld::store::DefaultParams;
+use libipld::Cid;
 use libipld::Ipld::Link;
 use libipld::Ipld::List;
 use std::str::FromStr;
@@ -57,17 +57,19 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
     _env: Env,
     data: MetadataSchema,
 ) -> StdResult<HandleAnswer> {
-    //TODO: 
-    //Do a for each instead of a map collect 
+    //TODO:
+    //Do a for each instead of a map collect
     //because Ipld Link is not a collection
-    
     let ipld = Ipld::List(vec![
-        Ipld::Link(Cid::from_str("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D").unwrap()), 
-        Ipld::Link(Cid::from_str("QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm").unwrap())]);
+        Ipld::Link(Cid::from_str("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D").unwrap()),
+        Ipld::Link(Cid::from_str("QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm").unwrap()),
+    ]);
 
-    let links = data.links.iter()
-    .map(|l| Cid::from_str(l).unwrap())
-    .collect::<Vec<Cid>>();
+    let links = data
+        .links
+        .iter()
+        .map(|l| Cid::from_str(l).unwrap())
+        .collect::<Vec<Cid>>();
 
     let block = Block::<DefaultParams>::encode(
         IpldCodec::DagCbor,
@@ -79,16 +81,15 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
             "links": ipld,
             //"link": Ipld::List(vec![links]),
         }),
-    ).unwrap();
+    )
+    .unwrap();
 
     let cid = block.cid().to_string();
     let data = block.data().to_vec();
-    
-    let callback = HandleAnswer::AddMetadata{cid: cid.clone()};
-    
+
+    let callback = HandleAnswer::AddMetadata { cid: cid.clone() };
     let id = cid.into_bytes();
     save(&mut deps.storage, &id, &data)?;
-    
     Ok(callback)
 }
 
@@ -113,16 +114,15 @@ pub fn add_file<S: Storage, A: Api, Q: Querier>(
             "content": content,
             "time": time,
         }),
-    ).unwrap();
+    )
+    .unwrap();
 
     let cid = block.cid().to_string();
     let data = block.data().to_vec();
-    
-    let callback = HandleAnswer::AddFile{cid:cid.clone()};
-    
+
+    let callback = HandleAnswer::AddFile { cid: cid.clone() };
     let id = cid.into_bytes();
     save(&mut deps.storage, &id, &data)?;
-    
     Ok(callback)
 }
 
@@ -130,14 +130,14 @@ pub fn add_file<S: Storage, A: Api, Q: Querier>(
 //    deps: &Extern<S, A, Q>,
 //    msg: QueryMsg,
 //) -> StdResult<Binary> {
-    // match msg {
-    //     QueryMsg::GetCount {} => to_binary(&query_count(deps)?),
-    // }
+// match msg {
+//     QueryMsg::GetCount {} => to_binary(&query_count(deps)?),
+// }
 //}
 
 //fn query_count<S: Storage, A: Api, Q: Querier>(deps: &Extern<S, A, Q>) -> StdResult<CountResponse> {
-    // let state = config_read(&deps.storage).load()?;
-    // Ok(CountResponse { count: state.count })
+// let state = config_read(&deps.storage).load()?;
+// Ok(CountResponse { count: state.count })
 //}
 
 // #[cfg(test)]

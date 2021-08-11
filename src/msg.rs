@@ -19,7 +19,7 @@ pub enum HandleMsg {
         path: String,
         content: Vec<u8>,
         mode: String,
-        time: u64, 
+        time: u64,
         content_type: String,
     },
     AddMetadata {
@@ -31,12 +31,8 @@ pub enum HandleMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     // add QueryMsg types here
-    GetFile {
-        cid: String,
-    },
-    GetMetadata {
-        cid: String,
-    },
+    GetFile { cid: String },
+    GetMetadata { cid: String },
 }
 
 /// Responses from handle function
@@ -44,9 +40,7 @@ pub enum QueryMsg {
 #[serde(rename_all = "snake_case")]
 pub enum HandleAnswer {
     // add HandleMsg response types here
-    AddFile { 
-        cid: String,
-    },
+    AddFile { cid: String },
     AddMetadata { cid: String },
 }
 
