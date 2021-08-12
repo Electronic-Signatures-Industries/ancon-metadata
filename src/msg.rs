@@ -50,8 +50,6 @@ pub enum HandleAnswer {
 pub enum QueryAnswer {
     GetFile {
         data: Vec<u8>,
-        content_type: String,
-        path: String,
     },
     GetMetadata {
         data: Vec<u8>,

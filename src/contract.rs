@@ -1,4 +1,5 @@
 use crate::state::{load_from_store, save_to_store};
+
 use cosmwasm_std::{
     debug_print, to_binary, Api, Binary, Env, Extern, HandleResponse, InitResponse, Querier,
     StdError, StdResult, Storage,
@@ -6,16 +7,18 @@ use cosmwasm_std::{
 
 use crate::msg::{HandleAnswer, HandleMsg, InitMsg, QueryAnswer, QueryMsg};
 use crate::state::{config, config_read, File, Metadata, MetadataSchema, MetadataStorage, State};
+
 use libipld::block::Block;
 use libipld::ipld;
 use libipld::ipld::Ipld;
-
 use libipld::cid::multihash::Code;
 use libipld::store::DefaultParams;
 use libipld::Cid;
+use libipld::cbor::DagCborCodec;
+
 use std::str::FromStr;
 
-use libipld::cbor::DagCborCodec;
+type IpldBlock = libipld::block::Block<DefaultParams>;
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
@@ -56,7 +59,6 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
     _env: Env,
     data: MetadataSchema,
 ) -> StdResult<HandleAnswer> {
-
     let links: Vec<_> = data
         .links
         .iter()
@@ -127,7 +129,6 @@ fn get_metadata<S: Storage, A: Api, Q: Querier>(
     deps: &Extern<S, A, Q>,
     cid: String,
 ) -> StdResult<QueryAnswer> {
-
     let try_cid = Cid::new_v0(
         libipld::cid::multihash::MultihashGeneric::from_bytes(&cid.into_bytes()).unwrap(),
     )
@@ -138,10 +139,49 @@ fn get_metadata<S: Storage, A: Api, Q: Querier>(
     }
 
     let result = load_from_store(&deps.storage, &try_cid.to_bytes());
-    let block = Block::new(try_cid, result.unwrap()).unwrap();
+    // let block = <libipld::Block<libipld::DefaultParams>::encode(
+    // try_cid,
+    // result.unwrap(),
+    // ).unwrap();
+    //let block = IpldBlock::new{
+    //    cid: try_cid,
+    //    data: result.unwrap(),
+    //}
+    //.unwrap();
+    
+    let block = IpldBlock::new(try_cid, result.unwrap()).unwrap();
+    
     let response = QueryAnswer::GetMetadata {
         data: block.data().to_vec(),
+    };
+
+    Ok(response)
+}
+
+fn get_files<S: Storage, A: Api, Q: Querier>(
+    deps: &Extern<S, A, Q>,
+    cid: String,
+) -> StdResult<QueryAnswer> {
+    let try_cid = Cid::new_v0(
+        libipld::cid::multihash::MultihashGeneric::from_bytes(&cid.into_bytes()).unwrap(),
+    )
+    .unwrap();
+
+    if try_cid.codec() > 0 {
+        panic!("AAAaaaaa!!!!");
     }
+
+    let result = load_from_store(&deps.storage, &try_cid.to_bytes());
+    
+    let block = IpldBlock::new(try_cid, result.unwrap()).unwrap();
+    //let block = IpldBlock::encode(IpldCodec::Raw, Code::Blake3_256, &result).unwrap();
+    
+    //let block_decoded =  block.decode::<DagCborCodec, _>().unwrap();
+    //block2 = block.data().to_vec();
+
+    let response = QueryAnswer::GetFile {
+        data: block.data().to_vec(),
+    };
 
     Ok(response)
 }
