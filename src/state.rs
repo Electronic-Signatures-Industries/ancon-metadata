@@ -58,11 +58,18 @@ pub fn config_read<S: Storage>(storage: &S) -> ReadonlySingleton<S, State> {
     singleton_read(storage, CONFIG_KEY)
 }
 
-pub fn save<T: Serialize, S: Storage>(storage: &mut S, key: &[u8], value: &T) -> StdResult<()> {
+pub fn save_to_store<T: Serialize, S: Storage>(
+    storage: &mut S,
+    key: &[u8],
+    value: &T,
+) -> StdResult<()> {
     return set_bin_data(storage, key, &value);
 }
 
-pub fn load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &S, key: &[u8]) -> StdResult<T> {
+pub fn load_from_store<T: DeserializeOwned, S: ReadonlyStorage>(
+    storage: &S,
+    key: &[u8],
+) -> StdResult<T> {
     return get_bin_data(storage, key);
 }
 

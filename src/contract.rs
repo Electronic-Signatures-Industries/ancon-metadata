@@ -1,4 +1,4 @@
-use crate::state::save;
+use crate::state::{load_from_store, save_to_store};
 use cosmwasm_std::{
     debug_print, to_binary, Api, Binary, Env, Extern, HandleResponse, InitResponse, Querier,
     StdError, StdResult, Storage,
@@ -7,16 +7,15 @@ use cosmwasm_std::{
 use crate::msg::{HandleAnswer, HandleMsg, InitMsg, QueryAnswer, QueryMsg};
 use crate::state::{config, config_read, File, Metadata, MetadataSchema, MetadataStorage, State};
 use libipld::block::Block;
-use libipld::codec_impl::IpldCodec;
 use libipld::ipld;
 use libipld::ipld::Ipld;
 
 use libipld::cid::multihash::Code;
 use libipld::store::DefaultParams;
 use libipld::Cid;
-use libipld::Ipld::Link;
-use libipld::Ipld::List;
 use std::str::FromStr;
+
+use libipld::cbor::DagCborCodec;
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
@@ -57,19 +56,7 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
     _env: Env,
     data: MetadataSchema,
 ) -> StdResult<HandleAnswer> {
-    //TODO:
-    //Do a for each instead of a map collect
-    //because Ipld Link is not a collection
-    //let ipld = Ipld::List(vec![
-    //    Ipld::Link(Cid::from_str("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D").unwrap()),
-    //    Ipld::Link(Cid::from_str("QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm").unwrap()),
-    //]);
 
-    // let links = data
-    //     .links
-    //     .iter()
-    //     .map(|l| Cid::from_str(l).unwrap())
-    //     .collect::<Vec<Ipld::Link(Cid)>>();
     let links: Vec<_> = data
         .links
         .iter()
@@ -83,8 +70,8 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
     // };
 
     let block = Block::<DefaultParams>::encode(
-        IpldCodec::DagCbor,
-        Code::Blake3_256,
+        DagCborCodec,
+        Code::Sha2_256,
         &ipld!({
             "name":data.name,
             "description": data.description,
@@ -99,7 +86,7 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
 
     let callback = HandleAnswer::AddMetadata { cid: cid.clone() };
     let id = cid.into_bytes();
-    save(&mut deps.storage, &id, &data)?;
+    save_to_store(&mut deps.storage, &id, &data)?;
     Ok(callback)
 }
 
@@ -115,8 +102,8 @@ pub fn add_file<S: Storage, A: Api, Q: Querier>(
     let sender_address_raw = deps.api.canonical_address(&env.message.sender)?;
 
     let block = Block::<DefaultParams>::encode(
-        IpldCodec::DagCbor,
-        Code::Blake3_256,
+        DagCborCodec,
+        Code::Sha2_256,
         &ipld!({
             "owner": sender_address_raw.to_string(),
             "path": path,
@@ -132,23 +119,47 @@ pub fn add_file<S: Storage, A: Api, Q: Querier>(
 
     let callback = HandleAnswer::AddFile { cid: cid.clone() };
     let id = cid.into_bytes();
-    save(&mut deps.storage, &id, &data)?;
+    save_to_store(&mut deps.storage, &id, &data)?;
     Ok(callback)
 }
 
-//pub fn query<S: Storage, A: Api, Q: Querier>(
-//    deps: &Extern<S, A, Q>,
-//    msg: QueryMsg,
-//) -> StdResult<Binary> {
-// match msg {
-//     QueryMsg::GetCount {} => to_binary(&query_count(deps)?),
-// }
-//}
+fn get_metadata<S: Storage, A: Api, Q: Querier>(
+    deps: &Extern<S, A, Q>,
+    cid: String,
+) -> StdResult<QueryAnswer> {
 
-//fn query_count<S: Storage, A: Api, Q: Querier>(deps: &Extern<S, A, Q>) -> StdResult<CountResponse> {
+    let try_cid = Cid::new_v0(
+        libipld::cid::multihash::MultihashGeneric::from_bytes(&cid.into_bytes()).unwrap(),
+    )
+    .unwrap();
+
+    if try_cid.codec() > 0 {
+        panic!("AAAaaaaa!!!!");
+    }
+
+    let result = load_from_store(&deps.storage, &try_cid.to_bytes());
+    let block = Block::new(try_cid, result.unwrap()).unwrap();
+    let response = QueryAnswer::GetMetadata {
+        data: block.data().to_vec(),
+    }
+
+    Ok(response)
+}
+
+// pub fn query<S: Storage, A: Api, Q: Querier>(
+// deps: &Extern<S, A, Q>,
+// msg: QueryMsg,
+// ) -> StdResult<HandleAnswer> {
+// match msg {
+// QueryMsg::GetMetadata { cid } => get_metadata(deps, cid),
+// QueryMsg::GetFile { cid } => get_file(deps, msg, cid),
+// }
+// }
+
+// fn query_count<S: Storage, A: Api, Q: Querier>(deps: &Extern<S, A, Q>) -> StdResult<CountResponse> {
 // let state = config_read(&deps.storage).load()?;
 // Ok(CountResponse { count: state.count })
-//}
+// }
 
 // #[cfg(test)]
 // mod tests {
