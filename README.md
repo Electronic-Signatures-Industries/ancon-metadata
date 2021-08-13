@@ -21,27 +21,71 @@
       "image": {
           "type": "string",
           "description": "A URI pointing to a resource with mime type image/* representing the asset to which this token represents.",
-      };
-      "links": {
+      },
+      "sources": {
           "type": "array",
-          "description": "A set of ipld links",
-      };
-  };
-  "required": [ "name", "description", "image", "links" ]
-},
+          "description": "Current intellectual property",
+      },
+      "parent": {
+          "type": "array",
+          "description": "Direct ascendant of the current intellectual property",
+      },
+      "references": {
+          "type": "array",
+          "description": "Sample of references included in the current intellectual property",
+      },
+      "kind": {
+        "type": "string",
+        "description": "Type of linked metadata compatible with schema.org",
+      }
+  },
+  "required": [ "name", "description", "image", "sources" ]
+}
 ```
 
 ## Metadata Sample
 
 ```json
 {
-  "name": "XDV metadata sample",
+  "name": "XDV metadata sample: Press article",
+  "description": "testing sample",
+  "image": "https://explore.ipld.io/#/explore/QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
+  "sources": ["QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D"],
+  "kind": "Publication"
+}
+```
+
+```json
+{
+  "name": "XDV metadata sample: Cientific Paper about Special Relativity Theory",
   "description": "testing sample",
   "image": "https://explore.ipld.io/#/explore/QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
   "links": [
-    "https://explore.ipld.io/#/explore/QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
-    "https://explore.ipld.io/#/explore/z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE",
-    "https://explore.ipld.io/#/explore/QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm",
+    "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
+    "z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE",
+    "QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm"
   ],
+  "service": [
+    "https://explore.ipld.io/#/explore/",
+    "https://explore.ipld.io/#/explore/",
+    "https://explore.ipld.io/#/explore/"
+  ],
+  "kind": "Publication"
+}
+```
+
+```json
+{
+  "name": "XDV metadata sample: NFT",
+  "description": "testing sample",
+  "image": "https://explore.ipld.io/#/explore/QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
+  "sources": ["QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D"],
+  "parent": ["QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D"],
+  "references": [
+    "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
+    "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
+    "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D"
+  ],
+  "kind": "NFT"
 }
 ```

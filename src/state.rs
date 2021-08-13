@@ -1,23 +1,18 @@
-
-use cosmwasm_std::CanonicalAddr;
-use std::{any::type_name};
 use bincode2;
+use cosmwasm_std::CanonicalAddr;
 use serde::{Deserialize, Serialize};
+use std::any::type_name;
 
-use cosmwasm_std::{
-ReadonlyStorage, StdError, StdResult, Storage,
-};
+use cosmwasm_std::{ReadonlyStorage, StdError, StdResult, Storage};
 use cosmwasm_storage::{singleton, singleton_read, ReadonlySingleton, Singleton};
 use cosmwasm_storage::{PrefixedStorage, ReadonlyPrefixedStorage};
 use schemars::JsonSchema;
 
+use libipld::Cid;
 use secret_toolkit::storage::{AppendStore, AppendStoreMut};
 use serde::de::DeserializeOwned;
-use libipld::Cid;
 
 pub static CONFIG_KEY: &[u8] = b"config";
-
-
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct File {
@@ -29,8 +24,7 @@ pub struct File {
     pub size: u64,
 }
 
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq,  JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Metadata {
     pub cid: String,
     pub data: MetadataSchema,
@@ -42,7 +36,7 @@ pub struct MetadataStorage {
     pub data: Vec<u8>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq,  JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MetadataSchema {
     pub name: String,
     pub description: String,
@@ -64,21 +58,30 @@ pub fn config_read<S: Storage>(storage: &S) -> ReadonlySingleton<S, State> {
     singleton_read(storage, CONFIG_KEY)
 }
 
-pub fn save<T: Serialize, S: Storage>(storage: &mut S, key: &[u8], value: &T) -> StdResult<()> {
+pub fn save_to_store<T: Serialize, S: Storage>(
+    storage: &mut S,
+    key: &[u8],
+    value: &T,
+) -> StdResult<()> {
     return set_bin_data(storage, key, &value);
 }
 
-pub fn load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &S, key: &[u8]) -> StdResult<T> {
+pub fn load_from_store<T: DeserializeOwned, S: ReadonlyStorage>(
+    storage: &S,
+    key: &[u8],
+) -> StdResult<T> {
     return get_bin_data(storage, key);
 }
 
-pub fn may_load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &S, key: &[u8]) -> StdResult<Option<T>> {
+pub fn may_load<T: DeserializeOwned, S: ReadonlyStorage>(
+    storage: &S,
+    key: &[u8],
+) -> StdResult<Option<T>> {
     match storage.get(key) {
         Some(value) => get_bin_data(storage, key).map(Some),
         None => Ok(None),
     }
-}    
-
+}
 
 fn set_bin_data<T: Serialize, S: Storage>(storage: &mut S, key: &[u8], data: &T) -> StdResult<()> {
     let bin_data =
