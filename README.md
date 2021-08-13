@@ -40,7 +40,7 @@
       }
   },
   "required": [ "name", "description", "image", "sources" ]
-},
+}
 ```
 
 ## Metadata Sample
