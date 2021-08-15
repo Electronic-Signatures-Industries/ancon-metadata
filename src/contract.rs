@@ -1,6 +1,7 @@
 use crate::state::{load_from_store, save_to_store};
 use cosmwasm_std::{
-    debug_print, to_binary, Api, Env, Extern, InitResponse, Querier, StdError, StdResult, Storage,
+    debug_print, to_binary, Api, Binary, Env, Extern, HandleResponse, InitResponse, Querier,
+    StdError, StdResult, Storage,
 };
 
 use crate::msg::{HandleAnswer, HandleMsg, InitMsg, QueryAnswer, QueryMsg};
@@ -36,7 +37,7 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     msg: HandleMsg,
-) -> StdResult<HandleAnswer> {
+) -> StdResult<HandleResponse> {
     match msg {
         HandleMsg::AddFile {
             path,
@@ -54,7 +55,7 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
     _env: Env,
     data: MetadataSchema,
     path: String,
-) -> StdResult<HandleAnswer> {
+) -> StdResult<HandleResponse> {
     let refs: Vec<_> = data
         .refs
         .iter()
@@ -94,7 +95,11 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
     let callback = HandleAnswer::AddMetadata { cid: cid };
 
     save_to_store(&mut deps.storage, &composite.into_bytes(), &data)?;
-    Ok(callback)
+    Ok(HandleResponse {
+        messages: vec![],
+        log: vec![],
+        data: Some(to_binary(&callback)?),
+    })
 }
 
 pub fn add_file<S: Storage, A: Api, Q: Querier>(
@@ -105,7 +110,7 @@ pub fn add_file<S: Storage, A: Api, Q: Querier>(
     time: u64,
     content: Vec<u8>,
     mode: String,
-) -> StdResult<HandleAnswer> {
+) -> StdResult<HandleResponse> {
     let sender_address_raw = deps.api.canonical_address(&env.message.sender)?;
 
     let path2 = path.clone();
@@ -137,13 +142,17 @@ pub fn add_file<S: Storage, A: Api, Q: Querier>(
     let callback = HandleAnswer::AddFile { cid: cid };
 
     save_to_store(&mut deps.storage, &composite.into_bytes(), &data)?;
-    Ok(callback)
+    Ok(HandleResponse {
+        messages: vec![],
+        log: vec![],
+        data: Some(to_binary(&callback)?),
+    })
 }
 
 pub fn query<S: Storage, A: Api, Q: Querier>(
     deps: &Extern<S, A, Q>,
     msg: QueryMsg,
-) -> StdResult<QueryAnswer> {
+) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetFile { cid, path } => get_file(deps, cid, path),
         QueryMsg::GetMetadata { cid, path } => get_metadata(deps, cid, path),
@@ -154,7 +163,7 @@ fn get_metadata<S: Storage, A: Api, Q: Querier>(
     deps: &Extern<S, A, Q>,
     cid: String,
     path: String,
-) -> StdResult<QueryAnswer> {
+) -> StdResult<Binary> {
     let try_cid = Cid::new_v0(
         libipld::cid::multihash::MultihashGeneric::from_bytes(&cid.into_bytes()).unwrap(),
     )
@@ -179,14 +188,14 @@ fn get_metadata<S: Storage, A: Api, Q: Querier>(
     };
 
     //Returns the metadata loaded from store from a CID & transformed to an IpldBlock
-    Ok(response)
+    Ok(to_binary(&response)?)
 }
 
 fn get_file<S: Storage, A: Api, Q: Querier>(
     deps: &Extern<S, A, Q>,
     cid: String,
     path: String,
-) -> StdResult<QueryAnswer> {
+) -> StdResult<Binary> {
     let try_cid = Cid::new_v0(
         libipld::cid::multihash::MultihashGeneric::from_bytes(&cid.into_bytes()).unwrap(),
     )
@@ -211,7 +220,7 @@ fn get_file<S: Storage, A: Api, Q: Querier>(
         data: block.data().to_vec(),
     };
 
-    Ok(response)
+    Ok(to_binary(&response)?)
 }
 
 #[cfg(test)]
@@ -269,7 +278,7 @@ mod tests {
         let resp: HandleAnswer =
             handle(&mut deps, mock_env("creator", &collateral), payload).unwrap();
         match resp {
-            HandleAnswer::AddFile { cid } => {},
+            HandleAnswer::AddFile { cid } => {}
             HandleAnswer::AddMetadata { cid } => {
                 assert_eq!(
                     cid,
