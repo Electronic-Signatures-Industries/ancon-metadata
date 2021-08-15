@@ -1,5 +1,24 @@
 # XDV Protocol Rust Smart Contracts
 
+## Documentation
+
+
+### Handler
+
+- `AddMetadata`
+- `AddFile`
+
+### Query
+
+- `GetMetadata`
+- `GetFile`
+- `GetFileInfo`
+
+### State
+- Metadata
+- MetadataSchema
+- File
+
 ## Metadata JSON Schema
 
 ```json
@@ -27,16 +46,12 @@
           "description": "Current intellectual property",
       },
       "parent": {
-          "type": "array",
+          "type": "string",
           "description": "Direct ascendant of the current intellectual property",
       },
-      "references": {
+      "refs": {
           "type": "array",
           "description": "Sample of references included in the current intellectual property",
-      },
-      "kind": {
-        "type": "string",
-        "description": "Type of linked metadata compatible with schema.org",
       }
   },
   "required": [ "name", "description", "image", "sources" ]
@@ -50,8 +65,7 @@
   "name": "XDV metadata sample: Press article",
   "description": "testing sample",
   "image": "https://explore.ipld.io/#/explore/QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
-  "sources": ["QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D"],
-  "kind": "Publication"
+  "sources": ["QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D"]
 }
 ```
 
@@ -60,7 +74,7 @@
   "name": "XDV metadata sample: Cientific Paper about Special Relativity Theory",
   "description": "testing sample",
   "image": "https://explore.ipld.io/#/explore/QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
-  "links": [
+  "refs": [
     "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
     "z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE",
     "QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm"
@@ -74,8 +88,8 @@
   "description": "testing sample",
   "image": "https://explore.ipld.io/#/explore/QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
   "sources": ["QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D"],
-  "parent": ["QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D"],
-  "references": [
+  "parent": "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
+  "refs": [
     "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
     "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
     "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D"
