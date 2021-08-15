@@ -27,6 +27,7 @@ pub struct File {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Metadata {
     pub cid: String,
+    pub path: String,
     pub data: MetadataSchema,
 }
 
@@ -41,7 +42,9 @@ pub struct MetadataSchema {
     pub name: String,
     pub description: String,
     pub image: String,
-    pub links: Vec<String>,
+    pub sources: Vec<String>,
+    pub parent: String,
+    pub refs: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

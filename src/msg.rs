@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InitMsg {
     // add InitMsg parameters here
-    pub file: File,
-    pub metadata: Metadata,
+    // pub file: File,
+    // pub metadata: Metadata,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -23,6 +23,7 @@ pub enum HandleMsg {
         content_type: String,
     },
     AddMetadata {
+        path: String,
         data: MetadataSchema,
     },
 }
@@ -31,8 +32,8 @@ pub enum HandleMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     // add QueryMsg types here
-    GetFile { cid: String },
-    GetMetadata { cid: String },
+    GetFile { cid: String, path: String},
+    GetMetadata { cid: String, path: String},
 }
 
 /// Responses from handle function

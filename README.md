@@ -65,12 +65,6 @@
     "z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE",
     "QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm"
   ],
-  "service": [
-    "https://explore.ipld.io/#/explore/",
-    "https://explore.ipld.io/#/explore/",
-    "https://explore.ipld.io/#/explore/"
-  ],
-  "kind": "Publication"
 }
 ```
 
@@ -86,6 +80,5 @@
     "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
     "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D"
   ],
-  "kind": "NFT"
 }
 ```

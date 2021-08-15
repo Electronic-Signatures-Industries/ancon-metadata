@@ -1,14 +1,15 @@
 use crate::state::{load_from_store, save_to_store};
-
 use cosmwasm_std::{
-    debug_print, to_binary, Api, Binary, Env, Extern, HandleResponse, InitResponse, Querier,
-    StdError, StdResult, Storage,
+    debug_print, to_binary, Api, Env, Extern, InitResponse, Querier, StdError, StdResult, Storage,
 };
 
 use crate::msg::{HandleAnswer, HandleMsg, InitMsg, QueryAnswer, QueryMsg};
-use crate::state::{config, config_read, File, Metadata, MetadataSchema, MetadataStorage, State};
+use crate::state::{config, MetadataSchema, MetadataStorage, State};
 
-use libipld::{block::Block, ipld, ipld::Ipld, cbor::DagCborCodec, cid::multihash::Code, store::DefaultParams, Cid};
+use libipld::{
+    block::Block, cbor::DagCborCodec, cid::multihash::Code, ipld, ipld::Ipld, store::DefaultParams,
+    Cid,
+};
 
 use std::str::FromStr;
 
@@ -44,7 +45,7 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
             content,
             mode,
         } => add_file(deps, env, path, content_type, time, content, mode),
-        HandleMsg::AddMetadata { data } => add_metadata(deps, env, data),
+        HandleMsg::AddMetadata { data, path } => add_metadata(deps, env, data, path),
     }
 }
 
@@ -52,11 +53,17 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     _env: Env,
     data: MetadataSchema,
+    path: String,
 ) -> StdResult<HandleAnswer> {
-    let links: Vec<_> = data
-        .links
+    let refs: Vec<_> = data
+        .refs
         .iter()
-        .map(|l| Ipld::Link(Cid::from_str(l).unwrap()))
+        .map(|l| Ipld::Link(Cid::from_str(&l).unwrap()))
+        .collect();
+    let sources: Vec<_> = data
+        .sources
+        .iter()
+        .map(|l| Ipld::Link(Cid::from_str(&l).unwrap()))
         .collect();
 
     let block = Block::<DefaultParams>::encode(
@@ -66,18 +73,27 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
             "name":data.name,
             "description": data.description,
             "image": data.image,
-            "links": links,
+            "sources": sources,
+            "parent": Ipld::Link(Cid::from_str(&data.parent).unwrap()),
+            "refs": refs,
         }),
     )
     .unwrap();
 
-    let cid = block.cid().to_string();
     let data = block.data().to_vec();
+    let cid = block.cid().to_string();
+    let mut composite: String = "".to_string();
+    // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/'
+    // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/name'
+    // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/sources[0]'
+    composite.push_str(&cid);
+    composite.push_str("::");
+    composite.push_str(&path);
 
-    //Saves the cid & data to interal bincode2 storage
-    let callback = HandleAnswer::AddMetadata { cid: cid.clone() };
-    let id = cid.into_bytes();
-    save_to_store(&mut deps.storage, &id, &data)?;
+    //Saves path & data to interal bincode2 storage
+    let callback = HandleAnswer::AddMetadata { cid: cid };
+
+    save_to_store(&mut deps.storage, &composite.into_bytes(), &data)?;
     Ok(callback)
 }
 
@@ -92,6 +108,7 @@ pub fn add_file<S: Storage, A: Api, Q: Querier>(
 ) -> StdResult<HandleAnswer> {
     let sender_address_raw = deps.api.canonical_address(&env.message.sender)?;
 
+    let path2 = path.clone();
     let block = Block::<DefaultParams>::encode(
         DagCborCodec,
         Code::Sha2_256,
@@ -101,22 +118,42 @@ pub fn add_file<S: Storage, A: Api, Q: Querier>(
             "type": content_type,
             "content": content,
             "time": time,
+            "mode": mode
         }),
     )
     .unwrap();
 
-    let cid = block.cid().to_string();
     let data = block.data().to_vec();
+    let cid = block.cid().to_string();
+    let mut composite: String = "".to_string();
+    // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/'
+    // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/name'
+    // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/sources[0]'
+    composite.push_str(&cid);
+    composite.push_str("::");
+    composite.push_str(&path2);
 
-    let callback = HandleAnswer::AddFile { cid: cid.clone() };
-    let id = cid.into_bytes();
-    save_to_store(&mut deps.storage, &id, &data)?;
+    //Saves path & data to interal bincode2 storage
+    let callback = HandleAnswer::AddFile { cid: cid };
+
+    save_to_store(&mut deps.storage, &composite.into_bytes(), &data)?;
     Ok(callback)
+}
+
+pub fn query<S: Storage, A: Api, Q: Querier>(
+    deps: &Extern<S, A, Q>,
+    msg: QueryMsg,
+) -> StdResult<QueryAnswer> {
+    match msg {
+        QueryMsg::GetFile { cid, path } => get_file(deps, cid, path),
+        QueryMsg::GetMetadata { cid, path } => get_metadata(deps, cid, path),
+    }
 }
 
 fn get_metadata<S: Storage, A: Api, Q: Querier>(
     deps: &Extern<S, A, Q>,
     cid: String,
+    path: String,
 ) -> StdResult<QueryAnswer> {
     let try_cid = Cid::new_v0(
         libipld::cid::multihash::MultihashGeneric::from_bytes(&cid.into_bytes()).unwrap(),
@@ -127,7 +164,15 @@ fn get_metadata<S: Storage, A: Api, Q: Querier>(
         panic!("Invalid CID");
     }
 
-    let result = load_from_store(&deps.storage, &try_cid.to_bytes());
+    let mut composite: String = "".to_string();
+    // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/'
+    // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/name'
+    // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/sources[0]'
+    composite.push_str(&try_cid.to_string());
+    composite.push_str("::");
+    composite.push_str("/");
+
+    let result = load_from_store(&deps.storage, &composite.into_bytes());
     let block = IpldBlock::new(try_cid, result.unwrap()).unwrap();
     let response = QueryAnswer::GetMetadata {
         data: block.data().to_vec(),
@@ -137,9 +182,10 @@ fn get_metadata<S: Storage, A: Api, Q: Querier>(
     Ok(response)
 }
 
-fn get_files<S: Storage, A: Api, Q: Querier>(
+fn get_file<S: Storage, A: Api, Q: Querier>(
     deps: &Extern<S, A, Q>,
     cid: String,
+    path: String,
 ) -> StdResult<QueryAnswer> {
     let try_cid = Cid::new_v0(
         libipld::cid::multihash::MultihashGeneric::from_bytes(&cid.into_bytes()).unwrap(),
@@ -147,10 +193,18 @@ fn get_files<S: Storage, A: Api, Q: Querier>(
     .unwrap();
 
     if try_cid.codec() > 0 {
-        panic!("AAAaaaaa!!!!");
+        panic!("Invalid CID");
     }
 
-    let result = load_from_store(&deps.storage, &try_cid.to_bytes());
+    let mut composite: String = "".to_string();
+    // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/'
+    // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/name'
+    // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/sources[0]'
+    composite.push_str(&try_cid.to_string());
+    composite.push_str("::");
+    composite.push_str(&path);
+
+    let result = load_from_store(&deps.storage, &composite.into_bytes());
     let block = IpldBlock::new(try_cid, result.unwrap()).unwrap();
 
     let response = QueryAnswer::GetFile {
@@ -160,3 +214,118 @@ fn get_files<S: Storage, A: Api, Q: Querier>(
     Ok(response)
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cosmwasm_std::testing::{mock_dependencies, mock_env, MOCK_CONTRACT_ADDR};
+    use cosmwasm_std::{coins, CosmosMsg};
+
+    #[test]
+    fn proper_initialization() {
+        let mut deps = mock_dependencies(20, &coins(2, "token"));
+
+        let msg = InitMsg {};
+        let env = mock_env("creator", &coins(1000, "xdv"));
+
+        // we can just call .unwrap() to assert this was a success
+        let res = init(&mut deps, env, msg).unwrap();
+        assert_eq!(0, res.messages.len());
+    }
+
+    #[test]
+    fn add_metadata() {
+        let mut deps = mock_dependencies(20, &coins(2, "token"));
+
+        let amount = coins(40, "ETH");
+        let collateral = coins(1, "BTC");
+        let expires = 100_000;
+        let msg = InitMsg {};
+        let env = mock_env("creator", &collateral);
+
+        // we can just call .unwrap() to assert this was a success
+        let _ = init(&mut deps, env, msg).unwrap();
+
+        let data = MetadataSchema {
+            name: "XDV metadata sample: NFT".to_string(),
+            description: "testing sample".to_string(),
+            image:
+                "https://explore.ipld.io/#/explore/QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D"
+                    .to_string(),
+            sources: vec!["QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string()],
+            parent: "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string(),
+            refs: vec![
+                "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string(),
+                "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string(),
+            ],
+        };
+        let cid = "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string();
+        // add metadata
+
+        // add metadata - success message
+        let payload = HandleMsg::AddMetadata {
+            data: data,
+            path: "/".to_string(),
+        };
+        let resp: HandleAnswer =
+            handle(&mut deps, mock_env("creator", &collateral), payload).unwrap();
+        match resp {
+            HandleAnswer::AddFile { cid } => {},
+            HandleAnswer::AddMetadata { cid } => {
+                assert_eq!(
+                    cid,
+                    "bafyreicnuvbp2lhmanra7r5o564fo4n5hhynqmwqv5l3ymz27gqbmlf2xa"
+                );
+            }
+        }
+
+        //   // expired cannot execute
+        //   let info = mock_env("owner", &amount);
+        //   let mut env = mock_env();
+        //   env.block.height = 200_000;
+        //   let err = handle_execute(deps.as_mut(), env, info).unwrap_err();
+        //   match err {s
+        //     ContractError::OptionExpired { expired } => assert_eq!(expired, expires),
+        //     e => panic!("unexpected error: {}", e),
+        //   }
+
+        //   // bad counter_offer cannot execute
+        //   let msg_offer = coins(39, "ETH");
+        //   let info = mock_env("owner", &msg_offer);
+        //   let err = handle_execute(deps.as_mut(), mock_env(), info).unwrap_err();
+        //   match err {
+        //     ContractError::CounterOfferMismatch {
+        //       offer,
+        //       counter_offer,
+        //     } => {
+        //       assert_eq!(msg_offer, offer);
+        //       assert_eq!(amount, counter_offer);
+        //     }
+        //     e => panic!("unexpected error: {}", e),
+        //   }
+
+        //   // proper execution
+        //   let info = mock_env("owner", &amount);
+        //   let res = handle_execute(deps.as_mut(), mock_env(), info).unwrap();
+        //   assert_eq!(res.messages.len(), 2);
+        //   assert_eq!(
+        //     res.messages[0],
+        //     CosmosMsg::Bank(BankMsg::Send {
+        //       from_address: MOCK_CONTRACT_ADDR.into(),
+        //       to_address: "creator".into(),
+        //       amount,
+        //     })
+        //   );
+        //   assert_eq!(
+        //     res.messages[1],
+        //     CosmosMsg::Bank(BankMsg::Send {
+        //       from_address: MOCK_CONTRACT_ADDR.into(),
+        //       to_address: "owner".into(),
+        //       amount: collateral,
+        //     })
+        //   );
+
+        //   // check deleted
+        //   let _ = query_config(deps.as_ref()).unwrap_err();
+        // }
+    }
+}
