@@ -8,14 +8,14 @@ export ACCOUNT="secret12v6r4vcxhl72tx8te0wfgf84pqju2kkn5ztu6f"
 secretcli config node http://bootstrap.secrettestnet.io:26657 && \
       secretcli config chain-id holodeck-2  && \
       secretcli config trust-node true
-
+echo $ACCOUNT
 
 # Optimize
-docker run --rm -v $pwd:/contract \
+docker run --rm -v "$(pwd)":/code \
       --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
       --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
       cosmwasm/rust-optimizer:0.11.5
 
-secretcli tx compute store contract.wasm.gz --from $ACCOUNT -y --gas 1000000 --gas-prices=1.0uscrt
+secretcli tx compute store artifacts/ancon_protocol_metadata.wasm --from $ACCOUNT -y --gas 1000000 --gas-prices=1.0uscrt
 
 ## secretcli query tx <txhash>

@@ -33,6 +33,7 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
     Ok(InitResponse::default())
 }
 
+
 pub fn handle<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
