@@ -16,6 +16,6 @@ docker run --rm -v "$(pwd)":/code \
       --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
       cosmwasm/rust-optimizer:0.11.5
 
-secretcli tx compute store artifacts/ancon_protocol_metadata.wasm --from $ACCOUNT -y --gas 1000000 --gas-prices=1.0uscrt
+secretcli tx compute store artifacts/ancon_protocol_metadata.wasm --from $ACCOUNT -y --gas 2645586  --gas-prices=1.0uscrt
 
 ## secretcli query tx <txhash>
