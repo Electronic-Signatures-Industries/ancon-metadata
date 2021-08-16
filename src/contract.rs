@@ -1,7 +1,7 @@
 use crate::state::{load_from_store, save_to_store};
 use cosmwasm_std::{
-    debug_print, to_binary, Api, Binary, Env, Extern, HandleResponse, InitResponse, Querier,
-    StdError, StdResult, Storage,
+    debug_print, from_binary, to_binary, Api, Binary, Env, Extern, HandleResponse, InitResponse,
+    Querier, StdError, StdResult, Storage,
 };
 
 use crate::msg::{HandleAnswer, HandleMsg, InitMsg, QueryAnswer, QueryMsg};
@@ -275,9 +275,12 @@ mod tests {
             data: data,
             path: "/".to_string(),
         };
-        let resp: HandleAnswer =
+        let resp: HandleResponse =
             handle(&mut deps, mock_env("creator", &collateral), payload).unwrap();
-        match resp {
+
+        let b = resp.data.unwrap_or_default();
+        let object = from_binary(&b).unwrap();
+        match object {
             HandleAnswer::AddFile { cid } => {}
             HandleAnswer::AddMetadata { cid } => {
                 assert_eq!(

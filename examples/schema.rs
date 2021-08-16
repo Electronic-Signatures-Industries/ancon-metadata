@@ -3,8 +3,8 @@ use std::fs::create_dir_all;
 
 use cosmwasm_schema::{export_schema, remove_schemas, schema_for};
 
-use rust_xdv_protocol::msg::{ HandleMsg, InitMsg, QueryMsg};
-use rust_xdv_protocol::state::State;
+use ancon_protocol_metadata::msg::{HandleAnswer, HandleMsg, InitMsg, QueryAnswer, QueryMsg};
+use ancon_protocol_metadata::state::{File, Metadata, MetadataStorage, State, MetadataSchema};
 
 fn main() {
     let mut out_dir = current_dir().unwrap();
@@ -15,5 +15,10 @@ fn main() {
     export_schema(&schema_for!(InitMsg), &out_dir);
     export_schema(&schema_for!(HandleMsg), &out_dir);
     export_schema(&schema_for!(QueryMsg), &out_dir);
-    export_schema(&schema_for!(State), &out_dir);
+    export_schema(&schema_for!(HandleAnswer), &out_dir);
+    export_schema(&schema_for!(QueryAnswer), &out_dir);
+    export_schema(&schema_for!(File), &out_dir);
+    export_schema(&schema_for!(Metadata), &out_dir);
+    export_schema(&schema_for!(MetadataSchema), &out_dir);
+    export_schema(&schema_for!(MetadataStorage), &out_dir);
 }
