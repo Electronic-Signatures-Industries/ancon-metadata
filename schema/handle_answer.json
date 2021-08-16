@@ -1,24 +1,21 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "QueryMsg",
+  "title": "HandleAnswer",
+  "description": "Responses from handle function",
   "anyOf": [
     {
       "type": "object",
       "required": [
-        "get_file"
+        "add_file"
       ],
       "properties": {
-        "get_file": {
+        "add_file": {
           "type": "object",
           "required": [
-            "cid",
-            "path"
+            "cid"
           ],
           "properties": {
             "cid": {
-              "type": "string"
-            },
-            "path": {
               "type": "string"
             }
           }
@@ -28,20 +25,16 @@
     {
       "type": "object",
       "required": [
-        "get_metadata"
+        "add_metadata"
       ],
       "properties": {
-        "get_metadata": {
+        "add_metadata": {
           "type": "object",
           "required": [
-            "cid",
-            "path"
+            "cid"
           ],
           "properties": {
             "cid": {
-              "type": "string"
-            },
-            "path": {
               "type": "string"
             }
           }

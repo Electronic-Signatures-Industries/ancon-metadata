@@ -5,33 +5,106 @@
     {
       "type": "object",
       "required": [
-        "increment"
+        "add_file"
       ],
       "properties": {
-        "increment": {
-          "type": "object"
+        "add_file": {
+          "type": "object",
+          "required": [
+            "content",
+            "content_type",
+            "mode",
+            "path",
+            "time"
+          ],
+          "properties": {
+            "content": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 0.0
+              }
+            },
+            "content_type": {
+              "type": "string"
+            },
+            "mode": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "time": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            }
+          }
         }
       }
     },
     {
       "type": "object",
       "required": [
-        "reset"
+        "add_metadata"
       ],
       "properties": {
-        "reset": {
+        "add_metadata": {
           "type": "object",
           "required": [
-            "count"
+            "data",
+            "path"
           ],
           "properties": {
-            "count": {
-              "type": "integer",
-              "format": "int32"
+            "data": {
+              "$ref": "#/definitions/MetadataSchema"
+            },
+            "path": {
+              "type": "string"
             }
           }
         }
       }
     }
-  ]
+  ],
+  "definitions": {
+    "MetadataSchema": {
+      "type": "object",
+      "required": [
+        "description",
+        "image",
+        "name",
+        "parent",
+        "refs",
+        "sources"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        },
+        "refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
 }
