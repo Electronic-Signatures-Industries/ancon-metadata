@@ -45,6 +45,7 @@ pub struct MetadataSchema {
     pub sources: Vec<String>,
     pub parent: String,
     pub refs: Vec<String>,
+    //pub owner: String
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

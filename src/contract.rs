@@ -9,7 +9,7 @@ use crate::state::{config, MetadataSchema, MetadataStorage, State};
 
 use libipld::{
     block::Block, cbor::DagCborCodec, cid::multihash::Code, ipld, ipld::Ipld, store::DefaultParams,
-    Cid,
+    Cid, cid::CidGeneric
 };
 
 use std::str::FromStr;
@@ -32,7 +32,6 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
 
     Ok(InitResponse::default())
 }
-
 
 pub fn handle<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
@@ -89,8 +88,8 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
     // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/name'
     // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/sources[0]'
     composite.push_str(&cid);
-    composite.push_str("::");
-    composite.push_str(&path);
+    //composite.push_str("::");
+    //composite.push_str(&path);
 
     //Saves path & data to interal bincode2 storage
     let callback = HandleAnswer::AddMetadata { cid: cid };
@@ -165,22 +164,20 @@ fn get_metadata<S: Storage, A: Api, Q: Querier>(
     cid: String,
     path: String,
 ) -> StdResult<Binary> {
-    let try_cid = Cid::new_v0(
-        libipld::cid::multihash::MultihashGeneric::from_bytes(&cid.into_bytes()).unwrap(),
-    )
-    .unwrap();
-
-    if try_cid.codec() > 0 {
-        panic!("Invalid CID");
-    }
+    let cid2 = cid.clone();
+    let try_cid = Cid::from_str(&cid).unwrap();
+    
+    // if try_cid.codec() > 0 {
+    //     panic!("Invalid CID");
+    // }
 
     let mut composite: String = "".to_string();
     // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/'
     // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/name'
     // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/sources[0]'
-    composite.push_str(&try_cid.to_string());
-    composite.push_str("::");
-    composite.push_str("/");
+    composite.push_str(&cid2);
+    //composite.push_str("::");
+    //composite.push_str(&path);
 
     let result = load_from_store(&deps.storage, &composite.into_bytes());
     let block = IpldBlock::new(try_cid, result.unwrap()).unwrap();
@@ -288,8 +285,178 @@ mod tests {
                     cid,
                     "bafyreicnuvbp2lhmanra7r5o564fo4n5hhynqmwqv5l3ymz27gqbmlf2xa"
                 );
+                assert_ne!(
+                    cid,
+                    "hhynqmwqv5l3ymz27gqbmlf2xabafyreicnuvbp2lhmanra7r5o564fo4n5"
+                );
+                assert_ne!(
+                    cid,
+                    "57576"
+                );
+                assert_ne!(
+                    cid,
+                    ""
+                );
+                assert_ne!(
+                    cid,
+                    "0"
+                );
             }
         }
+    }
+    
+    // fn add_file() {
+    //     let mut deps = mock_dependencies(20, &coins(2, "token"));
+
+    //     let amount = coins(40, "ETH");
+    //     let collateral = coins(1, "BTC");
+    //     let expires = 100_000;
+    //     let msg = InitMsg {};
+    //     let env = mock_env("creator", &collateral);
+
+    //     // we can just call .unwrap() to assert this was a success
+    //     let _ = init(&mut deps, env, msg).unwrap();
+
+    //     let data = MetadataSchema {
+            
+    //     };
+    //     let cid = "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string();
+    //     // add metadata
+
+    //     // add metadata - success message
+    //     let payload = HandleMsg::AddFile {
+    //         data: data,
+    //         path: "/".to_string(),
+    //     };
+    //     let resp: HandleResponse =
+    //         handle(&mut deps, mock_env("creator", &collateral), payload).unwrap();
+
+    //     let b = resp.data.unwrap_or_default();
+    //     let object = from_binary(&b).unwrap();
+    //     match object {
+    //         HandleAnswer::AddFile { cid } => {
+    //             assert_eq!(
+    //             cid,
+    //             "bafyreicnuvbp2lhmanra7r5o564fo4n5hhynqmwqv5l3ymz27gqbmlf2xa"
+    //         );
+    //     }}
+    //         HandleAnswer::AddMetadata { cid } => {
+                
+    //     }
+    // }
+    #[test]
+    fn get_metadata() {
+        let mut deps = mock_dependencies(20, &coins(2, "token"));
+
+        let amount = coins(40, "ETH");
+        let collateral = coins(1, "BTC");
+        let expires = 100_000;
+        let msg = InitMsg {};
+        let env = mock_env("creator", &collateral);
+
+        // we can just call .unwrap() to assert this was a success
+        let _ = init(&mut deps, env, msg).unwrap();
+        
+        //Adding Metadata for the test
+        let data = MetadataSchema {
+            name: "XDV metadata sample: NFT".to_string(),
+            description: "testing sample".to_string(),
+            image:
+                "https://explore.ipld.io/#/explore/QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D"
+                    .to_string(),
+            sources: vec!["QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string()],
+            parent: "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string(),
+            refs: vec![
+                "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string(),
+                "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string(),
+            ],
+        };
+        let cid = "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string();
+        // add metadata
+
+        // add metadata - success message
+        let payload_m = HandleMsg::AddMetadata {
+            data: data,
+            path: "/".to_string(),
+        };
+
+        let resp: HandleResponse =
+            handle(&mut deps, mock_env("creator", &collateral), payload_m).unwrap();
+
+        //let cid = "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string();
+        //let try_cid = "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string();
+        
+        // get metadata
+        
+        // get metadata - success message
+        let payload_q = QueryMsg::GetMetadata {
+            cid: cid,
+            path: "/".to_string(),
+        };
+        let resp: Binary =
+            query(&mut deps, payload_q).unwrap();
+
+        let object = from_binary(&resp).unwrap();
+        match object {
+            QueryAnswer::GetFile { data } => {}
+            QueryAnswer::GetMetadata { data } => {
+                assert_eq!(
+                    data,
+                    vec![0],
+                );
+                
+            }
+        }
+    }
+
+    // fn get_file() {
+    //     let mut deps = mock_dependencies(20, &coins(2, "token"));
+
+    //     let amount = coins(40, "ETH");
+    //     let collateral = coins(1, "BTC");
+    //     let expires = 100_000;
+    //     let msg = InitMsg {};
+    //     let env = mock_env("creator", &collateral);
+
+    //     // we can just call .unwrap() to assert this was a success
+    //     let _ = init(&mut deps, env, msg).unwrap();
+
+    //     let data = File {
+            
+    //     };
+    //     let cid = "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string();
+    //     // add metadata
+
+    //     // add metadata - success message
+    //     let payload = HandleMsg::GetFile {
+    //         data: data,
+    //         path: "/".to_string(),
+    //     };
+    //     let resp: HandleResponse =
+    //         handle(&mut deps, mock_env("creator", &collateral), payload).unwrap();
+
+    //     let b = resp.data.unwrap_or_default();
+    //     let object = from_binary(&b).unwrap();
+    //     match object {
+    //         HandleAnswer::GetFile { cid } => {}
+    //         HandleAnswer::GetMetadata { cid } => {
+    //             assert_eq!(
+                    
+    //             );
+    //         }
+    //     }
+
+        // let cid = "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string();
+
+        // match object {
+        //     HandleAnswer::AddFile { cid } => {}
+        //     HandleAnswer::AddMetadata { cid } => {
+        //         assert_eq!(
+        //             cid,
+        //             "hhynqmwqv5l3ymz27gqbmlf2xabafyreicnuvbp2lhmanra7r5o564fo4n5"
+        //         );
+        //     }
+        // }
 
         //   // expired cannot execute
         //   let info = mock_env("owner", &amount);
@@ -340,5 +507,5 @@ mod tests {
         //   // check deleted
         //   let _ = query_config(deps.as_ref()).unwrap_err();
         // }
-    }
+    //}
 }
