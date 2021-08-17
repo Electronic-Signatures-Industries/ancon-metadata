@@ -45,9 +45,17 @@
           "type": "array",
           "description": "Current intellectual property",
       },
+      "owner": {
+          "type": "string",
+          "description": "The owner is a DID identifier",
+      },
       "parent": {
           "type": "string",
           "description": "Direct ascendant of the current intellectual property",
+      },
+      "verifiedCredential": {
+          "type": "object",
+          "description": "Is the verified credential for the metadata",
       },
       "refs": {
           "type": "array",
