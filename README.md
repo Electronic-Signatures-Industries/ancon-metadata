@@ -1,4 +1,4 @@
-# XDV Protocol Rust Smart Contracts
+# Ancon Protocol Rust Smart Contracts
 
 ## Documentation
 
