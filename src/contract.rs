@@ -194,20 +194,18 @@ fn get_file<S: Storage, A: Api, Q: Querier>(
     cid: String,
     path: String,
 ) -> StdResult<Binary> {
-    let try_cid = Cid::new_v0(
-        libipld::cid::multihash::MultihashGeneric::from_bytes(&cid.into_bytes()).unwrap(),
-    )
-    .unwrap();
-
-    if try_cid.codec() > 0 {
-        panic!("Invalid CID");
-    }
+    let cid2 = cid.clone();
+    let try_cid = Cid::from_str(&cid).unwrap();
+    
+    // if try_cid.codec() > 0 {
+    //     panic!("Invalid CID");
+    // }
 
     let mut composite: String = "".to_string();
     // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/'
     // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/name'
     // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/sources[0]'
-    composite.push_str(&try_cid.to_string());
+    composite.push_str(&cid2);
     composite.push_str("::");
     composite.push_str(&path);
 
@@ -358,7 +356,7 @@ mod tests {
         let _ = init(&mut deps, env, msg).unwrap();
         
         //Adding Metadata for the test
-        let data = MetadataSchema {
+        let data_payload = MetadataSchema {
             name: "XDV metadata sample: NFT".to_string(),
             description: "testing sample".to_string(),
             image:
@@ -376,16 +374,13 @@ mod tests {
 
         // add metadata - success message
         let payload_m = HandleMsg::AddMetadata {
-            data: data,
+            data: data_payload,
             path: "/".to_string(),
         };
 
         let resp: HandleResponse =
             handle(&mut deps, mock_env("creator", &collateral), payload_m).unwrap();
 
-        //let cid = "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string();
-        //let try_cid = "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string();
-        
         // get metadata
         
         // get metadata - success message
@@ -401,8 +396,8 @@ mod tests {
             QueryAnswer::GetFile { data } => {}
             QueryAnswer::GetMetadata { data } => {
                 assert_eq!(
-                    data,
-                    vec![0],
+                    data.len(),
+                    325,
                 );
                 
             }
