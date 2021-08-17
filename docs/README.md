@@ -1,7 +1,7 @@
-# XDV Protocol Core API Reference
+# Ancon Protocol API Reference
 
 These contains the protocol specifications:
 
-* [Base Protocol](Protocol.md)
+* [Universal Metadata](Protocol.md)
 * [Cross Chain Mint Swap](CrosschainMintSwap.md)
 * [Data Query](DataQuery.md)
