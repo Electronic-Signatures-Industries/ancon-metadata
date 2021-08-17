@@ -88,8 +88,8 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
     // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/name'
     // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/sources[0]'
     composite.push_str(&cid);
-    //composite.push_str("::");
-    //composite.push_str(&path);
+    composite.push_str("::");
+    composite.push_str(&path);
 
     //Saves path & data to interal bincode2 storage
     let callback = HandleAnswer::AddMetadata { cid: cid };
@@ -176,8 +176,8 @@ fn get_metadata<S: Storage, A: Api, Q: Querier>(
     // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/name'
     // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/sources[0]'
     composite.push_str(&cid2);
-    //composite.push_str("::");
-    //composite.push_str(&path);
+    composite.push_str("::");
+    composite.push_str(&path);
 
     let result = load_from_store(&deps.storage, &composite.into_bytes());
     let block = IpldBlock::new(try_cid, result.unwrap()).unwrap();
@@ -371,7 +371,7 @@ mod tests {
                 "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string(),
             ],
         };
-        let cid = "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D".to_string();
+        let cid = "bafyreicnuvbp2lhmanra7r5o564fo4n5hhynqmwqv5l3ymz27gqbmlf2xa".to_string();
         // add metadata
 
         // add metadata - success message
