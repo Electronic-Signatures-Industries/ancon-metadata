@@ -51,6 +51,7 @@ pub struct MetadataSchema {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct State {
     pub owner: CanonicalAddr,
+    pub tag: String,
     pub paused: bool,
 }
 

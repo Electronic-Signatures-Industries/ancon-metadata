@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InitMsg {
+    pub tag: String,
     // add InitMsg parameters here
     // pub file: File,
     // pub metadata: Metadata,

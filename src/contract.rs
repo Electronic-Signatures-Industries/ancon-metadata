@@ -22,13 +22,14 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
     msg: InitMsg,
 ) -> StdResult<InitResponse> {
     let state = State {
+        tag: msg.tag,
         paused: false,
         owner: deps.api.canonical_address(&env.message.sender)?,
     };
 
     config(&mut deps.storage).save(&state)?;
 
-    debug_print!("Contract was initialized by {}", env.message.sender);
+//    debug_print!("Contract was initialized by {}", env.message.sender);
 
     Ok(InitResponse::default())
 }
@@ -229,7 +230,7 @@ mod tests {
     fn proper_initialization() {
         let mut deps = mock_dependencies(20, &coins(2, "token"));
 
-        let msg = InitMsg {};
+        let msg = InitMsg { tag: "test".to_string() };
         let env = mock_env("creator", &coins(1000, "xdv"));
 
         // we can just call .unwrap() to assert this was a success
@@ -244,7 +245,7 @@ mod tests {
         let amount = coins(40, "ETH");
         let collateral = coins(1, "BTC");
         let expires = 100_000;
-        let msg = InitMsg {};
+        let msg = InitMsg { tag: "test".to_string() };
         let env = mock_env("creator", &collateral);
 
         // we can just call .unwrap() to assert this was a success
@@ -349,7 +350,7 @@ mod tests {
         let amount = coins(40, "ETH");
         let collateral = coins(1, "BTC");
         let expires = 100_000;
-        let msg = InitMsg {};
+        let msg = InitMsg { tag: "test".to_string() };
         let env = mock_env("creator", &collateral);
 
         // we can just call .unwrap() to assert this was a success
