@@ -57,7 +57,7 @@
           "type": "object",
           "description": "Is the verified credential for the metadata",
       },
-      "refs": {
+      "links": {
           "type": "array",
           "description": "Sample of references included in the current intellectual property",
       }
@@ -83,8 +83,8 @@
   "description": "testing sample",
   "image": "https://explore.ipld.io/#/explore/QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
   "refs": [
-    "QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
-    "z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE",
+    "/ipfs/QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D",
+    "/ancon/z8mWaJHXieAVxxLagBpdaNWFEBKVWmMiE",
     "QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm"
   ],
 }
