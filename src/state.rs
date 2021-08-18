@@ -8,7 +8,6 @@ use cosmwasm_storage::{singleton, singleton_read, ReadonlySingleton, Singleton};
 use cosmwasm_storage::{PrefixedStorage, ReadonlyPrefixedStorage};
 use schemars::JsonSchema;
 
-use libipld::Cid;
 use secret_toolkit::storage::{AppendStore, AppendStoreMut};
 use serde::de::DeserializeOwned;
 
@@ -21,7 +20,7 @@ pub struct File {
     pub path: String,
     pub content: Vec<u8>,
     pub mode: String,
-    pub size: u64,
+    pub time: u64
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

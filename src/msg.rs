@@ -22,10 +22,12 @@ pub enum HandleMsg {
         mode: String,
         time: u64,
         content_type: String,
+        cid: String,
     },
     AddMetadata {
         path: String,
-        data: MetadataSchema,
+        data: Vec<u8>,
+        cid: String,
     },
 }
 
