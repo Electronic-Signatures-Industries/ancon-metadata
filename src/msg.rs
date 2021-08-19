@@ -18,7 +18,7 @@ pub enum HandleMsg {
     // add HandleMsg types here
     AddFile {
         path: String,
-        content: Vec<u8>,
+        content: String,
         mode: String,
         time: u64,
         content_type: String,
@@ -26,7 +26,7 @@ pub enum HandleMsg {
     },
     AddMetadata {
         path: String,
-        data: Vec<u8>,
+        data: String,
         cid: String,
     },
 }

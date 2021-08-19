@@ -50,10 +50,11 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
 pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     _env: Env,
-    data: Vec<u8>,
+    data: String,
     cid: String,
     path: String,
 ) -> StdResult<HandleResponse> {
+    let content_b = base64::decode(data).unwrap();
     let mut composite: String = "".to_string();
     // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/'
     // key: 'QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D::/name'
@@ -65,7 +66,7 @@ pub fn add_metadata<S: Storage, A: Api, Q: Querier>(
     //Saves path & data to interal bincode2 storage
     let callback = HandleAnswer::AddMetadata { cid: cid };
 
-    save_to_store(&mut deps.storage, &composite.into_bytes(), &data)?;
+    save_to_store(&mut deps.storage, &composite.into_bytes(), &content_b)?;
     Ok(HandleResponse {
         messages: vec![],
         log: vec![],
@@ -79,11 +80,12 @@ pub fn add_file<S: Storage, A: Api, Q: Querier>(
     path: String,
     content_type: String,
     time: u64,
-    content: Vec<u8>,
+    content: String,
     mode: String,
     cid: String,
 ) -> StdResult<HandleResponse> {
-    let sender_address_raw = deps.api.canonical_address(&env.message.sender)?;
+    let content_b = base64::decode(content).unwrap();
+    // let sender_address_raw = deps.api.canonical_address(&env.message.sender)?;
     let path2 = path.clone();
     let cid2 = cid.clone();
 
@@ -93,7 +95,7 @@ pub fn add_file<S: Storage, A: Api, Q: Querier>(
         content_type,
         path,
         time,
-        content,
+        content: content_b,
     };
 
     let mut composite: String = "".to_string();
